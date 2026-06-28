@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
+import rjToursLogo from './assets/rj-tours-logo.svg';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000',
 });
+
+const AUTH_TOKEN_KEY = 'rj_tours_travels_token';
+const LEGACY_AUTH_TOKEN_KEY = 'travelease_token';
 
 function formatCurrency(value) {
   return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(value || 0);
@@ -31,6 +35,14 @@ function getErrorMessage(error, defaultMsg) {
     }).join(', ');
   }
   return JSON.stringify(detail);
+}
+
+function BrandLogo() {
+  return (
+    <div className="brand-logo-circle" aria-hidden="true">
+      <img src={rjToursLogo} alt="" className="brand-logo-img" />
+    </div>
+  );
 }
 
 const flightsData = [
@@ -69,7 +81,14 @@ function App() {
   const [activeReviews, setActiveReviews] = useState([]);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
-  const [token, setToken] = useState(localStorage.getItem('travelease_token') || '');
+  const [token, setToken] = useState(() => {
+    const savedToken = localStorage.getItem(AUTH_TOKEN_KEY) || localStorage.getItem(LEGACY_AUTH_TOKEN_KEY) || '';
+    if (savedToken && !localStorage.getItem(AUTH_TOKEN_KEY)) {
+      localStorage.setItem(AUTH_TOKEN_KEY, savedToken);
+      localStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
+    }
+    return savedToken;
+  });
   const [me, setMe] = useState(null);
   const [message, setMessage] = useState('');
   const [bookingMessage, setBookingMessage] = useState('');
@@ -154,7 +173,8 @@ function App() {
       .then((response) => setMe(response.data))
       .catch(() => {
         setMe(null);
-        localStorage.removeItem('travelease_token');
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        localStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
         setToken('');
       });
   }, [token]);
@@ -284,7 +304,7 @@ function App() {
 
     try {
       const response = await api.post('/auth/login', payload);
-      localStorage.setItem('travelease_token', response.data.access_token);
+      localStorage.setItem(AUTH_TOKEN_KEY, response.data.access_token);
       setToken(response.data.access_token);
       setAuthMessage('Signed in successfully.');
       setExploreAsGuest(false);
@@ -323,9 +343,9 @@ function App() {
         email: 'admin089@gmail.com',
         password: 'admin089'
       });
-      localStorage.setItem('travelease_token', response.data.access_token);
+      localStorage.setItem(AUTH_TOKEN_KEY, response.data.access_token);
       setToken(response.data.access_token);
-      setAuthMessage('Signed in as RJ Travels Admin.');
+      setAuthMessage('Signed in as RJ Tours and Travels Admin.');
       setExploreAsGuest(false);
     } catch (error) {
       setAuthMessage('Auto-login failed.');
@@ -333,7 +353,8 @@ function App() {
   }
 
   function handleLogout() {
-    localStorage.removeItem('travelease_token');
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
     setToken('');
     setMe(null);
     setActivePackageDetail(null);
@@ -480,12 +501,10 @@ function App() {
           }}
         >
           <div className="gateway-brand">
-            <div className="brand-logo-circle">
-              <span className="brand-plane-icon">RJ</span>
-            </div>
+            <BrandLogo />
             <div>
-              <p className="brand-name">RJ Travels</p>
-              <p className="brand-tag">TOURS & TRAVEL</p>
+              <p className="brand-name">RJ Tours and Travels</p>
+              <p className="brand-tag">TOURS & TRAVELS</p>
             </div>
           </div>
           <div className="gateway-promo-text">
@@ -582,12 +601,10 @@ function App() {
       {/* HEADER NAVBAR */}
       <header className="topbar glass-panel">
         <div className="brand-lockup">
-          <div className="brand-logo-circle">
-            <span className="brand-plane-icon">RJ</span>
-          </div>
+          <BrandLogo />
           <div>
-            <p className="brand-name">RJ Travels</p>
-            <p className="brand-tag">TOURS & TRAVEL</p>
+            <p className="brand-name">RJ Tours and Travels</p>
+            <p className="brand-tag">TOURS & TRAVELS</p>
           </div>
         </div>
 
@@ -602,7 +619,7 @@ function App() {
         <div className="topbar-actions">
           <div className="support-pill">
             <span>Need Help?</span>
-            <strong>+1 234 567 8900</strong>
+            <strong>6354278553</strong>
           </div>
           
           {me ? (
@@ -841,7 +858,7 @@ function App() {
           <section id="dynamic-results-section" className="section-block dynamic-results-block glass-panel">
             <div className="section-header">
               <div>
-                <span className="section-kicker">RJ Travels Live Search Results</span>
+                <span className="section-kicker">RJ Tours and Travels Live Search Results</span>
                 <h2>Available {activeTab} in India</h2>
               </div>
               <p className="header-helper-text">
@@ -1034,7 +1051,7 @@ function App() {
         {/* WHY CHOOSE RJ TRAVELS & BANNER SPLIT */}
         <section className="split-layout">
           <article className="why-panel glass-panel">
-            <span className="section-kicker">Why Choose RJ Travels?</span>
+            <span className="section-kicker">Why Choose RJ Tours and Travels?</span>
             <h2>Designed around real database integrations</h2>
             <div className="why-grid">
               <div className="why-item">
@@ -1477,12 +1494,10 @@ function App() {
         <div className="footer-top-grid">
           <div className="footer-brand">
             <div className="brand-lockup white-logo">
-              <div className="brand-logo-circle">
-                <span className="brand-plane-icon">RJ</span>
-              </div>
+              <BrandLogo />
               <div>
-                <p className="brand-name">RJ Travels</p>
-                <p className="brand-tag">TOURS & TRAVEL</p>
+                <p className="brand-name">RJ Tours and Travels</p>
+                <p className="brand-tag">TOURS & TRAVELS</p>
               </div>
             </div>
             <p className="footer-brand-desc">
@@ -1516,7 +1531,7 @@ function App() {
         </div>
 
         <div className="footer-bottom-row">
-          <p>© 2026 RJ Travels. Powered by RJ Travels DB API. All rights reserved.</p>
+          <p>© 2026 RJ Tours and Travels. Powered by RJ Tours and Travels DB API. All rights reserved.</p>
           <div className="footer-socials">
             <span>🌐 Facebook</span>
             <span>📸 Instagram</span>
